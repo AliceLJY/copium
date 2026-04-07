@@ -1,65 +1,148 @@
-import Image from "next/image";
+"use client";
+
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { NurseBubble } from "@/components/NurseBubble";
+
+const TAGLINES = [
+  "Your anxiety, our KPI | 您的焦虑，我们的KPI",
+  "Specializing in overthinking | 专治各种想太多",
+  "First aid for the AI age | AI时代的精神急救站",
+  "Anxiety isn't a disease, until it is | 焦虑不是病，焦起来真要命",
+  "One registration, all worries solved* | 挂个号，焦虑就好*",
+];
 
 export default function Home() {
+  const router = useRouter();
+  const [tagline, setTagline] = useState("");
+  const [showNurse, setShowNurse] = useState(false);
+
+  useEffect(() => {
+    setTagline(TAGLINES[Math.floor(Math.random() * TAGLINES.length)]);
+    const timer = setTimeout(() => setShowNurse(true), 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className="flex-1 flex flex-col items-center justify-center relative overflow-hidden px-4">
+      {/* Background heartbeat line */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <svg
+          className="absolute top-1/2 -translate-y-1/2 w-[200%] h-32 opacity-10"
+          viewBox="0 0 1200 100"
+          style={{ animation: "heartbeat-line 4s linear infinite" }}
+        >
+          <polyline
+            fill="none"
+            stroke="var(--neon-green)"
+            strokeWidth="2"
+            points="0,50 200,50 230,50 250,10 270,90 290,50 320,50 600,50 630,50 650,10 670,90 690,50 720,50 1000,50 1030,50 1050,10 1070,90 1090,50 1200,50"
+          />
+        </svg>
+      </div>
+
+      {/* Red cross */}
+      <motion.div
+        initial={{ scale: 0, rotate: -180 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: "spring", duration: 1 }}
+        className="mb-8"
+      >
+        <div className="relative w-24 h-24">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-20 h-6 bg-neon-red rounded-sm" />
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-6 h-20 bg-neon-red rounded-sm" />
+          </div>
+          <div className="absolute inset-0 rounded-full border-2 border-neon-red opacity-30 animate-ping" />
+        </div>
+      </motion.div>
+
+      {/* Title */}
+      <motion.h1
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="text-5xl md:text-7xl font-bold tracking-wider neon-text-green flicker text-center"
+      >
+        COPIUM
+      </motion.h1>
+
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6 }}
+        className="mt-3 text-center"
+      >
+        <span className="text-xl md:text-2xl text-neon-cyan/80 tracking-widest">
+          焦 虑 急 诊 室
+        </span>
+        <br />
+        <span className="text-xs text-neon-cyan/40 tracking-[0.3em]">
+          ANXIETY EMERGENCY ROOM
+        </span>
+      </motion.p>
+
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+        className="mt-6 text-sm text-foreground/50 italic text-center"
+      >
+        {tagline}
+      </motion.p>
+
+      {/* Enter button */}
+      <motion.button
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 1.2, type: "spring" }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => router.push("/triage")}
+        className="mt-12 px-10 py-4 text-lg font-bold tracking-wider
+                   bg-transparent neon-border text-neon-green
+                   hover:bg-neon-green/10 transition-colors
+                   pulse-glow cursor-pointer"
+      >
+        [ REGISTER 挂号 ]
+      </motion.button>
+
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.4 }}
+        transition={{ delay: 1.8 }}
+        className="mt-4 text-xs text-foreground/30"
+      >
+        Open 24/7 · No insurance accepted · Results may vary
+      </motion.p>
+
+      {/* Disclaimer */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.3 }}
+        transition={{ delay: 2.5 }}
+        className="mt-8 max-w-sm text-center"
+      >
+        <p className="text-[10px] text-foreground/25 leading-relaxed">
+          This is a humor &amp; stress-relief tool, not medical advice.
+          If you&apos;re struggling, please reach out:
+        </p>
+        <p className="text-[10px] text-neon-cyan/30 mt-1">
+          🇨🇳 24h Helpline 心理援助热线: 400-161-9995 &nbsp;|&nbsp;
+          🌍 Crisis Text Line: text HOME to 741741
+        </p>
+      </motion.div>
+
+      {/* Nurse bubble */}
+      {showNurse && (
+        <NurseBubble
+          message="Another anxious soul... click the glowing button above to register. 又来一个焦虑的...点上面那个闪的按钮。"
+          position="bottom-right"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      )}
+    </main>
   );
 }
