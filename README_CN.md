@@ -9,6 +9,8 @@
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Vibe](https://img.shields.io/badge/氛围-癫了-ff00ff)
 
+![COPIUM —— 一间赛博朋克"焦虑急诊室"：挂号登记你的焦虑，被分诊到某个荒诞 AI 病房，最后拿到一张可以分享的出院诊断书。](docs/assets/copium-landing.png)
+
 ## 这是什么？
 
 生活压力大。老板说话像谜语人。AI 可能要抢你饭碗。周一永远存在。传统的解压方式？没意思。

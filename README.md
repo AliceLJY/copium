@@ -11,6 +11,8 @@ An AI-powered anxiety release web app disguised as a cyberpunk emergency room. W
 
 [中文版 README](./README_CN.md)
 
+![COPIUM — a cyberpunk "anxiety emergency room": register your anxiety, get routed to an absurd AI ward, and walk out with a shareable discharge report.](docs/assets/copium-landing.png)
+
 ## What Is This?
 
 Life is stressful. Your boss is cryptic. AI might take your job. Monday exists. Traditional coping mechanisms? Boring.
