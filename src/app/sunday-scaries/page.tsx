@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SUNDAY_SCARIES_PROMPT } from "@/lib/prompts";
+import { chatFetch } from "@/lib/llm-client";
 
 interface ThreatItem {
   name: string;
@@ -47,16 +48,12 @@ export default function SundayScaresPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const res = await chatFetch({
           messages: [
             { role: "system", content: SUNDAY_SCARIES_PROMPT },
             { role: "user", content: input },
           ],
-        }),
-      });
+        });
 
       const data = await res.json();
       if (data.error) throw new Error(data.error);

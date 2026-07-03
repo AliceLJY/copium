@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { NurseBubble } from "@/components/NurseBubble";
 import { TRIAGE_SYSTEM_PROMPT, getRandomNurseQuip } from "@/lib/prompts";
+import { chatFetch } from "@/lib/llm-client";
 
 interface TriageResult {
   type: string;
@@ -117,16 +118,12 @@ export default function TriagePage() {
     setError("");
 
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const res = await chatFetch({
           messages: [
             { role: "system", content: TRIAGE_SYSTEM_PROMPT },
             { role: "user", content: symptom },
           ],
-        }),
-      });
+        });
 
       const data = await res.json();
       if (data.error) throw new Error(data.error);

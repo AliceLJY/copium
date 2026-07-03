@@ -5,6 +5,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toPng } from "html-to-image";
 import { ROULETTE_PROMPT } from "@/lib/prompts";
+import { chatFetch } from "@/lib/llm-client";
 
 // ─── Types ───────────────────────────────────────────
 interface RouletteResult {
@@ -211,16 +212,12 @@ export default function RoulettePage() {
     setResult(null);
 
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const res = await chatFetch({
           messages: [
             { role: "system", content: ROULETTE_PROMPT },
             { role: "user", content: profession },
           ],
-        }),
-      });
+        });
 
       const data = await res.json();
       if (data.error) throw new Error(data.error);

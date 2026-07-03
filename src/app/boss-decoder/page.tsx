@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { NurseBubble } from "@/components/NurseBubble";
 import { BOSS_DECODER_PROMPT } from "@/lib/prompts";
+import { chatFetch } from "@/lib/llm-client";
 
 interface DecoderResult {
   original: string;
@@ -80,16 +81,12 @@ export default function BossDecoderPage() {
     setError("");
 
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const res = await chatFetch({
           messages: [
             { role: "system", content: BOSS_DECODER_PROMPT },
             { role: "user", content: bossMessage },
           ],
-        }),
-      });
+        });
 
       const data = await res.json();
       if (data.error) throw new Error(data.error);

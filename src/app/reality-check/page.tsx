@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import Link from "next/link";
 import { REALITY_CHECK_PROMPT } from "@/lib/prompts";
+import { chatFetch } from "@/lib/llm-client";
 
 type Phase = "input" | "empathy" | "but" | "hidden" | "truth";
 
@@ -22,17 +23,13 @@ export default function RealityCheckPage() {
     setPhase("input");
 
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const res = await chatFetch({
           messages: [
             { role: "system", content: REALITY_CHECK_PROMPT },
             { role: "user", content: comparison },
           ],
           stream: true,
-        }),
-      });
+        });
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({ error: "Unknown" }));

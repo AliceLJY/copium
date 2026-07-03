@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { NurseBubble } from "@/components/NurseBubble";
 import { SPIRAL_SYSTEM_PROMPT, getRandomNurseQuip } from "@/lib/prompts";
+import { chatFetch } from "@/lib/llm-client";
 
 interface Message {
   role: "user" | "assistant";
@@ -81,11 +82,7 @@ export default function SpiralPage() {
         })),
       ];
 
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: apiMessages, stream: true }),
-      });
+      const res = await chatFetch({ messages: apiMessages, stream: true });
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({ error: "Unknown" }));

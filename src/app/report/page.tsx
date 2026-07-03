@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toPng } from "html-to-image";
 import { NurseBubble } from "@/components/NurseBubble";
 import { REPORT_SYSTEM_PROMPT, getRandomNurseQuip } from "@/lib/prompts";
+import { chatFetch } from "@/lib/llm-client";
 
 interface ReportData {
   diagnosis: string;
@@ -42,10 +43,7 @@ export default function ReportPage() {
       .join("\n");
 
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const res = await chatFetch({
           messages: [
             { role: "system", content: REPORT_SYSTEM_PROMPT },
             {
@@ -53,8 +51,7 @@ export default function ReportPage() {
               content: `原始焦虑：${data.symptom}\n分诊结果：${JSON.stringify(data.triage)}\n治疗记录（${data.rounds}轮）：\n${conversationSummary}`,
             },
           ],
-        }),
-      });
+        });
 
       const result = await res.json();
       if (result.error) throw new Error(result.error);
