@@ -4,22 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SUNDAY_SCARIES_PROMPT } from "@/lib/prompts";
-import { chatFetch } from "@/lib/llm-client";
-
-interface ThreatItem {
-  name: string;
-  danger: number;
-  description: string;
-}
-
-interface SurvivalReport {
-  threat_level: string;
-  survival_rate: string;
-  threats: ThreatItem[];
-  survival_tips: string[];
-  weather_forecast: string;
-  motivational_quote: string;
-}
+import { chatFetch, LLM_SETTINGS_REQUIRED_STATUS } from "@/lib/llm-client";
+import { CRISIS_RESPONSE_STATUS } from "@/lib/crisis";
+import { parseSurvivalReport, type SurvivalReport } from "@/lib/result-validation";
 
 const THREAT_COLORS: Record<string, string> = {
   GREEN: "text-neon-green",
@@ -55,14 +42,13 @@ export default function SundayScaresPage() {
           ],
         });
 
+      if (res.status === CRISIS_RESPONSE_STATUS) return;
+      if (res.status === LLM_SETTINGS_REQUIRED_STATUS) return;
+
       const data = await res.json();
       if (data.error) throw new Error(data.error);
 
-      const jsonStr = data.content.replace(/```json?\n?|\n?```/g, "").trim();
-      const startIdx = jsonStr.indexOf("{");
-      const parsed: SurvivalReport = JSON.parse(
-        startIdx > 0 ? jsonStr.slice(startIdx) : jsonStr
-      );
+      const parsed = parseSurvivalReport(data.content);
       setReport(parsed);
     } catch (err) {
       console.error(err);

@@ -6,15 +6,47 @@ import { useRouter } from "next/navigation";
 import { toPng } from "html-to-image";
 import { NurseBubble } from "@/components/NurseBubble";
 import { REPORT_SYSTEM_PROMPT, getRandomNurseQuip } from "@/lib/prompts";
-import { chatFetch } from "@/lib/llm-client";
+import { chatFetch, LLM_SETTINGS_REQUIRED_STATUS } from "@/lib/llm-client";
+import { CRISIS_RESPONSE_STATUS } from "@/lib/crisis";
+import { parseReportData, type ReportData } from "@/lib/result-validation";
 
-interface ReportData {
-  diagnosis: string;
-  treatment_summary: string;
-  prescription: string[];
-  doctor_note: string;
-  survival_rate: string;
-  next_visit: string;
+interface StoredSpiralData {
+  symptom: string;
+  triage: unknown;
+  messages: Array<{ role: "user" | "assistant"; content: string }>;
+  rounds: number;
+}
+
+function parseStoredSpiralData(raw: string): StoredSpiralData {
+  const value: unknown = JSON.parse(raw);
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("Stored treatment record must be an object");
+  }
+  const record = value as Record<string, unknown>;
+  if (typeof record.symptom !== "string" || !Array.isArray(record.messages)) {
+    throw new Error("Stored treatment record is incomplete");
+  }
+  const messages = record.messages.map((item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      throw new Error("Stored message is invalid");
+    }
+    const message = item as Record<string, unknown>;
+    if (
+      (message.role !== "user" && message.role !== "assistant") ||
+      typeof message.content !== "string"
+    ) {
+      throw new Error("Stored message fields are invalid");
+    }
+    const role: "user" | "assistant" =
+      message.role === "user" ? "user" : "assistant";
+    return { role, content: message.content };
+  });
+  return {
+    symptom: record.symptom,
+    triage: record.triage,
+    messages,
+    rounds: Number.isInteger(record.rounds) ? (record.rounds as number) : 0,
+  };
 }
 
 export default function ReportPage() {
@@ -28,13 +60,22 @@ export default function ReportPage() {
   const reportRef = useRef<HTMLDivElement>(null);
 
   const generateReport = useCallback(async () => {
-    const stored = sessionStorage.getItem("copium_spiral");
-    if (!stored) {
+    let data: StoredSpiralData;
+    try {
+      const stored = sessionStorage.getItem("copium_spiral");
+      if (!stored) throw new Error("No stored treatment record");
+      data = parseStoredSpiralData(stored);
+    } catch (error) {
+      console.error(error);
+      try {
+        sessionStorage.removeItem("copium_spiral");
+      } catch {
+        // Storage may be unavailable; navigation still recovers the page.
+      }
       router.push("/");
       return;
     }
 
-    const data = JSON.parse(stored);
     const conversationSummary = data.messages
       .map(
         (m: { role: string; content: string }) =>
@@ -53,22 +94,18 @@ export default function ReportPage() {
           ],
         });
 
+      if (
+        res.status === CRISIS_RESPONSE_STATUS ||
+        res.status === LLM_SETTINGS_REQUIRED_STATUS
+      ) {
+        router.push("/triage");
+        return;
+      }
+
       const result = await res.json();
       if (result.error) throw new Error(result.error);
 
-      const jsonStr = result.content
-        .replace(/```json?\n?|\n?```/g, "")
-        .trim();
-      const parsed = JSON.parse(jsonStr);
-
-      // Ensure prescription is array
-      if (typeof parsed.prescription === "string") {
-        parsed.prescription = parsed.prescription
-          .split(/[;；\n]/)
-          .filter(Boolean);
-      }
-
-      setReport(parsed);
+      setReport(parseReportData(result.content));
     } catch (err) {
       console.error(err);
       setReport({
@@ -89,8 +126,16 @@ export default function ReportPage() {
   }, [router]);
 
   useEffect(() => {
-    setNurseQuip(getRandomNurseQuip("report"));
-    generateReport();
+    const quipTimer = window.setTimeout(() => {
+      setNurseQuip(getRandomNurseQuip("report"));
+    }, 0);
+    const reportTimer = window.setTimeout(() => {
+      void generateReport();
+    }, 0);
+    return () => {
+      window.clearTimeout(quipTimer);
+      window.clearTimeout(reportTimer);
+    };
   }, [generateReport]);
 
   const downloadImage = async () => {

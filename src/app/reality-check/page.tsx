@@ -4,7 +4,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import Link from "next/link";
 import { REALITY_CHECK_PROMPT } from "@/lib/prompts";
-import { chatFetch } from "@/lib/llm-client";
+import {
+  chatFetch,
+  LLM_SETTINGS_REQUIRED_STATUS,
+  readChatContentStream,
+} from "@/lib/llm-client";
+import { CRISIS_RESPONSE_STATUS } from "@/lib/crisis";
 
 type Phase = "input" | "empathy" | "but" | "hidden" | "truth";
 
@@ -31,38 +36,15 @@ export default function RealityCheckPage() {
           stream: true,
         });
 
+      if (res.status === CRISIS_RESPONSE_STATUS) return;
+      if (res.status === LLM_SETTINGS_REQUIRED_STATUS) return;
+
       if (!res.ok) {
         const errData = await res.json().catch(() => ({ error: "Unknown" }));
         throw new Error(errData.error || "Request failed");
       }
 
-      const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
-      let fullContent = "";
-
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value);
-          const lines = chunk.split("\n");
-
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              const data = line.slice(6);
-              if (data === "[DONE]") continue;
-              try {
-                const parsed = JSON.parse(data);
-                fullContent += parsed.content;
-                setResponseText(fullContent);
-              } catch {
-                // skip parse errors
-              }
-            }
-          }
-        }
-      }
+      await readChatContentStream(res, setResponseText);
 
       // Staggered reveal animation
       setPhase("empathy");

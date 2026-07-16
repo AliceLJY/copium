@@ -5,16 +5,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { NurseBubble } from "@/components/NurseBubble";
 import { TRIAGE_SYSTEM_PROMPT, getRandomNurseQuip } from "@/lib/prompts";
-import { chatFetch } from "@/lib/llm-client";
-
-interface TriageResult {
-  type: string;
-  typeName: string;
-  level: number;
-  diagnosis: string;
-  recommendation: string;
-  nurseComment: string;
-}
+import { chatFetch, LLM_SETTINGS_REQUIRED_STATUS } from "@/lib/llm-client";
+import { CRISIS_RESPONSE_STATUS } from "@/lib/crisis";
+import { parseTriageResult, type TriageResult } from "@/lib/result-validation";
 
 const LEVEL_COLORS = [
   "",
@@ -109,7 +102,10 @@ export default function TriagePage() {
   const [mode, setMode] = useState<PageMode>("input");
 
   useEffect(() => {
-    setNurseQuip(getRandomNurseQuip("triage"));
+    const timer = window.setTimeout(() => {
+      setNurseQuip(getRandomNurseQuip("triage"));
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const handleSubmit = async () => {
@@ -125,11 +121,13 @@ export default function TriagePage() {
           ],
         });
 
+      if (res.status === CRISIS_RESPONSE_STATUS) return;
+      if (res.status === LLM_SETTINGS_REQUIRED_STATUS) return;
+
       const data = await res.json();
       if (data.error) throw new Error(data.error);
 
-      const jsonStr = data.content.replace(/```json?\n?|\n?```/g, "").trim();
-      const parsed: TriageResult = JSON.parse(jsonStr);
+      const parsed = parseTriageResult(data.content);
       setResult(parsed);
       setMode("result");
     } catch (err: unknown) {

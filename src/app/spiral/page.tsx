@@ -1,11 +1,16 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { NurseBubble } from "@/components/NurseBubble";
 import { SPIRAL_SYSTEM_PROMPT, getRandomNurseQuip } from "@/lib/prompts";
-import { chatFetch } from "@/lib/llm-client";
+import {
+  chatFetch,
+  LLM_SETTINGS_REQUIRED_STATUS,
+  readChatContentStream,
+} from "@/lib/llm-client";
+import { CRISIS_RESPONSE_STATUS } from "@/lib/crisis";
 
 interface Message {
   role: "user" | "assistant";
@@ -32,18 +37,32 @@ export default function SpiralPage() {
   const [nurseQuip, setNurseQuip] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const autoSentRef = useRef(false);
 
   const levelConfig = LEVEL_CONFIGS[Math.min(round, 4)];
 
   // Load triage data + nurse quip
   useEffect(() => {
-    setNurseQuip(getRandomNurseQuip("spiral"));
-    const stored = sessionStorage.getItem("copium_triage");
-    if (stored) {
-      const data = JSON.parse(stored);
-      setSymptom(data.symptom);
-      setTriageData(data.result);
-    }
+    const timer = window.setTimeout(() => {
+      setNurseQuip(getRandomNurseQuip("spiral"));
+      try {
+        const stored = sessionStorage.getItem("copium_triage");
+        if (stored) {
+          const data = JSON.parse(stored);
+          setSymptom(typeof data.symptom === "string" ? data.symptom : "");
+          setTriageData(
+            data.result && typeof data.result === "object" ? data.result : null,
+          );
+        }
+      } catch {
+        try {
+          sessionStorage.removeItem("copium_triage");
+        } catch {
+          // Storage may be unavailable; the ward still works with manual input.
+        }
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   // Auto-scroll
@@ -51,15 +70,7 @@ export default function SpiralPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Auto-send first message from triage
-  useEffect(() => {
-    if (symptom && messages.length === 0) {
-      sendMessage(symptom);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symptom]);
-
-  const sendMessage = async (text: string) => {
+  const sendMessage = useCallback(async (text: string) => {
     if (streaming) return;
     const userMsg: Message = { role: "user", content: text };
     const newMessages = [...messages, userMsg];
@@ -84,41 +95,20 @@ export default function SpiralPage() {
 
       const res = await chatFetch({ messages: apiMessages, stream: true });
 
+      if (res.status === CRISIS_RESPONSE_STATUS) return;
+      if (res.status === LLM_SETTINGS_REQUIRED_STATUS) return;
+
       if (!res.ok) {
         const errData = await res.json().catch(() => ({ error: "Unknown" }));
         throw new Error(errData.error || "Stream failed");
       }
 
-      const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
-      let assistantContent = "";
-
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value);
-          const lines = chunk.split("\n");
-
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              const data = line.slice(6);
-              if (data === "[DONE]") continue;
-              try {
-                const parsed = JSON.parse(data);
-                assistantContent += parsed.content;
-                setMessages([
-                  ...newMessages,
-                  { role: "assistant", content: assistantContent },
-                ]);
-              } catch {
-                // skip parse errors
-              }
-            }
-          }
-        }
-      }
+      await readChatContentStream(res, (assistantContent) => {
+        setMessages([
+          ...newMessages,
+          { role: "assistant", content: assistantContent },
+        ]);
+      });
 
       setRound((r) => r + 1);
     } catch (err) {
@@ -134,7 +124,17 @@ export default function SpiralPage() {
       setStreaming(false);
       inputRef.current?.focus();
     }
-  };
+  }, [messages, streaming, triageData]);
+
+  // Auto-send first message from triage
+  useEffect(() => {
+    if (!symptom || messages.length > 0 || autoSentRef.current) return;
+    autoSentRef.current = true;
+    const timer = window.setTimeout(() => {
+      void sendMessage(symptom);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [messages.length, sendMessage, symptom]);
 
   const handleSubmit = () => {
     if (input.trim() && !streaming) {

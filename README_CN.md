@@ -2,7 +2,7 @@
 
 > **你的焦虑是真实的。我们的治疗不是。**
 
-一个披着赛博朋克急诊室外皮的 AI 焦虑释放 Web 应用。焦虑着进来，笑着出去——或者至少困惑到忘了自己在焦虑什么。
+一个披着赛博朋克急诊室外皮的 AI 辅助幽默减压 Web 应用。它提供荒诞重构、动画宣泄和可分享结果，但不是心理治疗。
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-blue?logo=typescript&logoColor=white)
@@ -15,7 +15,7 @@
 
 生活压力大。老板说话像谜语人。AI 可能要抢你饭碗。周一永远存在。传统的解压方式？没意思。
 
-**COPIUM** 接住你的真实焦虑，用一间由混沌 AI 医生运营的"医院"来治疗——包括分诊挂号、专科治疗、到最后给你一张你真的会想截图发朋友圈的出院诊断书。
+**COPIUM** 把真实焦虑送进一间由混沌 AI 医生运营的虚构“医院”——从分诊挂号、专科互动，到最后生成一张可以截图分享的出院诊断书。
 
 ## 六大科室
 
@@ -46,28 +46,20 @@
 git clone https://github.com/AliceLJY/copium.git
 cd copium
 npm install
-```
-
-创建 `.env.local`：
-```env
-LLM_API_KEY=你的API密钥
-LLM_BASE_URL=https://api.openai.com/v1    # 或任何 OpenAI 兼容的提供商
-LLM_MODEL=gpt-4o-mini                      # 或你能用的任何模型
-```
-
-```bash
 npm run dev
 # 打开 http://localhost:3000
 ```
 
-兼容**任何 OpenAI 兼容 API** —— OpenAI、MiniMax、Gemini、Groq、DeepSeek、通过 Ollama 跑的本地模型，都行。
+打开页面后，点击右上角齿轮，填写一个允许浏览器直连的 OpenAI 兼容接口、API key 和模型名。页面内置 DeepSeek、Kimi、MiniMax、SiliconFlow、OpenRouter 预设，但服务商的 CORS 与模型可用性可能变化。
+
+项目没有代转提示词的应用服务器。API key 优先保存在浏览器 `localStorage`；存储不可用时，只保留在当前标签页内存。key、提示词和输入会由浏览器直接发给你选择的服务商。不要填写不适合暴露给浏览器 JavaScript 的高权限 key。
 
 ## 技术栈
 
 - **Next.js 16**（App Router + Turbopack）
 - **Tailwind CSS v4** 赛博朋克霓虹主题
 - **Framer Motion** 动画（页面过渡、抖动效果、交错揭示）
-- **OpenAI SDK**（兼容任何提供商）
+- 浏览器端 **`fetch`** 调用用户选择的 OpenAI 兼容接口
 - **html-to-image** 生成可分享结果卡片
 - **Server-Sent Events** 流式聊天响应
 
@@ -78,21 +70,19 @@ npm run dev
 - **结果可存** — 命运轮盘卡片和出院报告都能下载为 PNG
 - **赛博朋克美学** — 霓虹光晕、CRT 扫描线、闪烁动画、心电图背景
 - **毒舌护士** — 随机出现的双语护士评论，阴阳怪气但充满爱
-- **有分寸感** — 我们调侃焦虑，不调侃心理疾病。页面底部附真实心理援助热线。
-
-## 截图
-
-*快了快了——我们现在太焦虑了截不了图。*
+- **危机中断** — 本地确定性关键词规则会在请求 AI 前暂停玩笑并显示真人援助资源。它只是尽力拦截，不是诊断，也可能漏掉隐晦表达。
 
 ## 免责声明
 
 COPIUM 是一个幽默/娱乐项目，**不能**替代专业心理健康支持。如果你正在经历困难时期，请寻求帮助：
 
-- 🇨🇳 24 小时热线：400-161-9995
+- 🇨🇳 中国大陆心理援助热线：**12356**
 - 🇺🇸 988 自杀与危机生命线：拨打或发短信 **988**
 - 🌏 [findahelpline.com](https://findahelpline.com)
 
-你的焦虑是真的。我们的医生不是。但笑声？那是真正的良药。
+如果可能马上发生危险，请联系当地急救或前往最近的急诊；尽量不要独处，联系一位信任的人，并远离可能用于自伤的物品。
+
+你的焦虑是真的。我们的医生是虚构的。幽默也许能让人短暂松一口气，但不能替代照护。
 
 ## 许可证
 

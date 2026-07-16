@@ -19,9 +19,14 @@ export default function Home() {
   const [showNurse, setShowNurse] = useState(false);
 
   useEffect(() => {
-    setTagline(TAGLINES[Math.floor(Math.random() * TAGLINES.length)]);
-    const timer = setTimeout(() => setShowNurse(true), 2000);
-    return () => clearTimeout(timer);
+    const taglineTimer = setTimeout(() => {
+      setTagline(TAGLINES[Math.floor(Math.random() * TAGLINES.length)]);
+    }, 0);
+    const nurseTimer = setTimeout(() => setShowNurse(true), 2000);
+    return () => {
+      clearTimeout(taglineTimer);
+      clearTimeout(nurseTimer);
+    };
   }, []);
 
   return (
@@ -131,8 +136,9 @@ export default function Home() {
           If you&apos;re struggling, please reach out:
         </p>
         <p className="text-[10px] text-neon-cyan/30 mt-1">
-          🇨🇳 24h Helpline 心理援助热线: 400-161-9995 &nbsp;|&nbsp;
-          🌍 Crisis Text Line: text HOME to 741741
+          🇨🇳 心理援助热线: 12356 &nbsp;|&nbsp;
+          🇺🇸 Call or text 988 &nbsp;|&nbsp;
+          🌍 findahelpline.com
         </p>
       </motion.div>
 

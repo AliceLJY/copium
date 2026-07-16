@@ -1,5 +1,5 @@
-// BYOK (Bring Your Own Key) config — stored ONLY in the visitor's browser
-// localStorage. Never sent to any server except the LLM provider they choose.
+// BYOK (Bring Your Own Key) config — kept in the visitor's browser. We prefer
+// localStorage and fall back to this tab's memory when storage is unavailable.
 
 export interface LLMConfig {
   baseURL: string;
@@ -8,6 +8,15 @@ export interface LLMConfig {
 }
 
 const STORAGE_KEY = "copium_llm_config";
+let memoryConfig: LLMConfig | null = null;
+
+function isLLMConfig(value: unknown): value is LLMConfig {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const candidate = value as Partial<LLMConfig>;
+  return Boolean(
+    candidate.baseURL?.trim() && candidate.apiKey?.trim() && candidate.model?.trim(),
+  );
+}
 
 export interface ProviderPreset {
   name: string;
@@ -16,9 +25,8 @@ export interface ProviderPreset {
   keyUrl: string; // where to get an API key
 }
 
-// All presets verified to allow browser CORS (probed 2026-07-03).
-// Note: OpenAI's official api.openai.com does NOT allow browser calls —
-// use OpenRouter to reach OpenAI models instead.
+// These presets supported browser calls when added. Provider CORS and model
+// availability can change, so connection failures are surfaced to the user.
 export const PROVIDER_PRESETS: ProviderPreset[] = [
   {
     name: "DeepSeek",
@@ -53,27 +61,35 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
 ];
 
 export function getLLMConfig(): LLMConfig | null {
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined") return memoryConfig;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as LLMConfig;
-    if (!parsed.baseURL || !parsed.apiKey || !parsed.model) return null;
-    return parsed;
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      if (isLLMConfig(parsed)) {
+        memoryConfig = parsed;
+        return parsed;
+      }
+    }
   } catch {
-    return null;
+    // Storage can be blocked in private browsing or embedded contexts.
   }
+  return memoryConfig;
 }
 
 export function saveLLMConfig(config: LLMConfig): void {
+  memoryConfig = config;
+  if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
   } catch {
-    // localStorage unavailable (private mode) — config lives only this session
+    // Config remains available in memory for this tab.
   }
 }
 
 export function clearLLMConfig(): void {
+  memoryConfig = null;
+  if (typeof window === "undefined") return;
   try {
     localStorage.removeItem(STORAGE_KEY);
   } catch {

@@ -33,10 +33,13 @@ export default function LLMSettings() {
   }, []);
 
   useEffect(() => {
-    loadFromStorage();
+    const loadTimer = window.setTimeout(loadFromStorage, 0);
     const onOpen = () => setOpen(true);
     window.addEventListener(OPEN_SETTINGS_EVENT, onOpen);
-    return () => window.removeEventListener(OPEN_SETTINGS_EVENT, onOpen);
+    return () => {
+      window.clearTimeout(loadTimer);
+      window.removeEventListener(OPEN_SETTINGS_EVENT, onOpen);
+    };
   }, [loadFromStorage]);
 
   const applyPreset = (i: number) => {
@@ -108,13 +111,13 @@ export default function LLMSettings() {
               ⚙️ 接入你自己的 AI
             </h2>
             <p className="text-xs text-foreground/40 mt-2 leading-relaxed">
-              本站没有后台服务器——填入任意 OpenAI 兼容接口，key
-              只保存在你自己的浏览器（localStorage）里，除了你选择的 AI
-              服务商，不会发给任何人。
+              本站没有中转 AI 请求的后台——请填写支持浏览器直连的 OpenAI
+              兼容接口。key 优先保存在本浏览器的 localStorage；若存储不可用，
+              只保留到当前标签页关闭。key、提示词和输入会直接发给你选择的服务商。
             </p>
             <p className="text-[10px] text-foreground/30 mt-1.5 leading-relaxed">
-              注：OpenAI 官方接口不允许浏览器直连，想用 GPT 系模型请走
-              OpenRouter。
+              浏览器 CORS 支持会随服务商策略变化；直连失败时，请换用明确支持
+              浏览器请求的接口。GPT 系模型可通过 OpenRouter 等兼容服务使用。
             </p>
 
             {/* Presets */}
@@ -167,7 +170,7 @@ export default function LLMSettings() {
 
             {/* Key links */}
             <p className="text-[10px] text-foreground/30 mt-3">
-              没有 key？上面选个服务商，去官网注册一个（一般有免费额度）：
+              没有 key？上面选个服务商，再去其官网查看当前注册与计费规则：
               {PROVIDER_PRESETS.map((p, i) => (
                 <span key={p.name}>
                   {i > 0 && " · "}

@@ -2,7 +2,7 @@
 
 > **Your anxiety is valid. Our treatment is not.**
 
-An AI-powered anxiety release web app disguised as a cyberpunk emergency room. Walk in anxious, walk out laughing — or at least confused enough to forget why you were worried.
+An AI-assisted humor and stress-relief web app disguised as a cyberpunk emergency room. It offers absurd reframing, animated catharsis, and shareable results; it is not mental-health treatment.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-blue?logo=typescript&logoColor=white)
@@ -17,7 +17,7 @@ An AI-powered anxiety release web app disguised as a cyberpunk emergency room. W
 
 Life is stressful. Your boss is cryptic. AI might take your job. Monday exists. Traditional coping mechanisms? Boring.
 
-**COPIUM** takes your real anxieties and treats them with the medical precision of a hospital run by chaotic AI doctors — complete with triage, specialized wards, and a discharge report you'll actually want to screenshot.
+**COPIUM** puts real anxieties through the fictional workflow of a hospital run by chaotic AI doctors — complete with triage, specialized wards, and a discharge report you can screenshot.
 
 ## The Wards
 
@@ -48,28 +48,20 @@ Life is stressful. Your boss is cryptic. AI might take your job. Monday exists. 
 git clone https://github.com/AliceLJY/copium.git
 cd copium
 npm install
-```
-
-Create `.env.local`:
-```env
-LLM_API_KEY=your-api-key
-LLM_BASE_URL=https://api.openai.com/v1    # or any OpenAI-compatible provider
-LLM_MODEL=gpt-4o-mini                      # or any model you have access to
-```
-
-```bash
 npm run dev
 # Open http://localhost:3000
 ```
 
-Works with **any OpenAI-compatible API** — OpenAI, MiniMax, Gemini, Groq, DeepSeek, local models via Ollama, you name it.
+Click the gear in the top-right corner and enter an OpenAI-compatible endpoint that permits direct browser requests, its API key, and a model name. The app has presets for DeepSeek, Kimi, MiniMax, SiliconFlow, and OpenRouter, but provider CORS and model availability can change.
+
+There is no application server proxying prompts. The API key is kept in browser `localStorage`, with a current-tab memory fallback when storage is unavailable. Your key, prompts, and inputs are sent directly from the browser to the provider you select. Do not use a key you cannot safely expose to browser JavaScript.
 
 ## Tech Stack
 
 - **Next.js 16** (App Router + Turbopack)
 - **Tailwind CSS v4** with cyberpunk neon theme
 - **Framer Motion** for animations (page transitions, shake effects, staggered reveals)
-- **OpenAI SDK** (compatible with any provider)
+- **Browser-side `fetch`** to a user-selected OpenAI-compatible endpoint
 - **html-to-image** for shareable result cards
 - **Server-Sent Events** for streaming chat responses
 
@@ -80,17 +72,19 @@ Works with **any OpenAI-compatible API** — OpenAI, MiniMax, Gemini, Groq, Deep
 - **Saveable Results** — Download your Roulette fortune card or discharge report as PNG
 - **Cyberpunk Aesthetic** — Neon glow, CRT scanlines, flicker animations, heartbeat ECG
 - **Snarky Nurse** — Random bilingual nurse comments that judge you (lovingly)
-- **Sensitivity-Aware** — We roast anxiety, not people. Real mental health resources included.
+- **Crisis interruption** — A deterministic local keyword gate pauses jokes before an AI request and shows human-help resources. It is best-effort, not a diagnosis, and can miss indirect language.
 
 ## Disclaimer
 
 COPIUM is a humor/entertainment project. It is **not** a substitute for professional mental health support. If you're going through a tough time, please reach out:
 
-- 🇨🇳 24-hour hotline: 400-161-9995
+- 🇨🇳 Mainland China mental-health support: **12356**
 - 🇺🇸 988 Suicide & Crisis Lifeline: call or text **988**
 - 🌏 [findahelpline.com](https://findahelpline.com)
 
-Your anxiety is real. Our doctors are not. But laughter? That's genuine medicine.
+If there may be immediate danger, contact local emergency services or go to the nearest emergency department. If possible, stay with a trusted person and move away from anything that could be used for self-harm.
+
+Your anxiety is real. Our doctors are fictional. Humor may offer a moment of relief, but it is not care.
 
 ## License
 

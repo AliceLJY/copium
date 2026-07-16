@@ -3,6 +3,7 @@
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { useState, useCallback, useRef } from "react";
 import Link from "next/link";
+import { containsCrisisLanguage, requestCrisisSupport } from "@/lib/crisis";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -137,6 +138,10 @@ export default function ShredderPage() {
   // Measure each char's position relative to container center for blackhole
   const measureAndDestroy = useCallback(() => {
     if (!text.trim()) return;
+    if (containsCrisisLanguage(text)) {
+      requestCrisisSupport();
+      return;
+    }
 
     const prepared = prepareChars(text);
 
@@ -431,7 +436,7 @@ export default function ShredderPage() {
               <div className="relative">
                 {Array.from({ length: 12 }).map((_, i) => {
                   const angle = (i / 12) * Math.PI * 2;
-                  const dist = 50 + Math.random() * 30;
+                  const dist = 50 + ((i * 37) % 30);
                   return (
                     <motion.div
                       key={i}

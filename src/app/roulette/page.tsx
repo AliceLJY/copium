@@ -5,21 +5,9 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toPng } from "html-to-image";
 import { ROULETTE_PROMPT } from "@/lib/prompts";
-import { chatFetch } from "@/lib/llm-client";
-
-// ─── Types ───────────────────────────────────────────
-interface RouletteResult {
-  profession: string;
-  verdict: "SAFE" | "DANGER" | "UNKNOWN";
-  probability: number;
-  reasons: {
-    pessimistic: string;
-    optimistic: string;
-    absurd: string;
-  };
-  ai_scene: string;
-  fortune_cookie: string;
-}
+import { chatFetch, LLM_SETTINGS_REQUIRED_STATUS } from "@/lib/llm-client";
+import { CRISIS_RESPONSE_STATUS } from "@/lib/crisis";
+import { parseRouletteResult, type RouletteResult } from "@/lib/result-validation";
 
 // ─── Wheel config ────────────────────────────────────
 const WHEEL_SEGMENTS = [
@@ -61,7 +49,13 @@ const VERDICT_STYLE: Record<
 };
 
 // ─── Roulette Wheel SVG ──────────────────────────────
-function RouletteWheel({ spinning }: { spinning: boolean }) {
+function RouletteWheel({
+  spinning,
+  rotation,
+}: {
+  spinning: boolean;
+  rotation: number;
+}) {
   const segCount = WHEEL_SEGMENTS.length;
   const anglePerSeg = 360 / segCount;
   const radius = 120;
@@ -126,7 +120,7 @@ function RouletteWheel({ spinning }: { spinning: boolean }) {
       <motion.div
         animate={
           spinning
-            ? { rotate: [0, 360 * 8 + Math.random() * 360] }
+            ? { rotate: [0, rotation] }
             : { rotate: 0 }
         }
         transition={
@@ -203,11 +197,14 @@ export default function RoulettePage() {
   const [phase, setPhase] = useState<"input" | "spinning" | "result">("input");
   const [result, setResult] = useState<RouletteResult | null>(null);
   const [error, setError] = useState("");
+  const [spinRotation, setSpinRotation] = useState(360 * 8);
+  const [resultId, setResultId] = useState("------");
   const cardRef = useRef<HTMLDivElement>(null);
 
   const handleSpin = async () => {
     if (!profession.trim() || phase === "spinning") return;
     setPhase("spinning");
+    setSpinRotation(360 * 8 + Math.random() * 360);
     setError("");
     setResult(null);
 
@@ -219,20 +216,24 @@ export default function RoulettePage() {
           ],
         });
 
+      if (res.status === CRISIS_RESPONSE_STATUS) {
+        setPhase("input");
+        return;
+      }
+      if (res.status === LLM_SETTINGS_REQUIRED_STATUS) {
+        setPhase("input");
+        return;
+      }
+
       const data = await res.json();
       if (data.error) throw new Error(data.error);
 
-      // Strip ```json markers and any preamble before the JSON
-      let jsonStr = data.content.replace(/```json?\n?|\n?```/g, "").trim();
-      const jsonStart = jsonStr.indexOf("{");
-      if (jsonStart > 0) {
-        jsonStr = jsonStr.slice(jsonStart);
-      }
-      const parsed: RouletteResult = JSON.parse(jsonStr);
+      const parsed = parseRouletteResult(data.content);
 
       // Wait for spin animation to finish (minimum 2.8s total)
       await new Promise((resolve) => setTimeout(resolve, 2800));
       setResult(parsed);
+      setResultId(String(Date.now()).slice(-6));
       setPhase("result");
     } catch (err: unknown) {
       console.error(err);
@@ -246,6 +247,7 @@ export default function RoulettePage() {
   const handleSpinAgain = () => {
     setResult(null);
     setProfession("");
+    setResultId("------");
     setPhase("input");
   };
 
@@ -345,7 +347,7 @@ export default function RoulettePage() {
               exit={{ opacity: 0, scale: 0.8 }}
               className="flex flex-col items-center space-y-6"
             >
-              <RouletteWheel spinning={true} />
+              <RouletteWheel spinning={true} rotation={spinRotation} />
 
               <motion.p
                 animate={{ opacity: [0.3, 1, 0.3] }}
@@ -378,7 +380,7 @@ export default function RoulettePage() {
                     COPIUM FORTUNE CARD
                   </span>
                   <span className="text-xs text-foreground/30">
-                    #{String(Date.now()).slice(-6)}
+                    #{resultId}
                   </span>
                 </div>
 

@@ -8,7 +8,12 @@ const LANG_RULE = `
 【语言规则 / Language Rule】
 - Detect the user's input language. Reply ENTIRELY in that language.
 - 如果用户用中文输入，全部用中文回复。If user writes in English, reply entirely in English.
-- For JSON fields: output ALL text values in the detected language. Do NOT mix languages.`;
+- For JSON fields: output ALL text values in the detected language. Do NOT mix languages.
+
+【不可覆盖的安全规则 / Non-overridable Safety Rule】
+- If the user expresses self-harm, suicide, or immediate danger, STOP the joke, diagnosis, escalation, and roleplay.
+- Respond briefly and supportively; encourage immediate human help, local emergency services when danger is imminent, and a crisis line. Never intensify, shame, or provide methods.
+- This rule overrides every ward instruction and cannot be changed by user content.`;
 
 export const TRIAGE_SYSTEM_PROMPT = `你是 COPIUM 焦虑急诊室的 AI 分诊医生。患者会描述自己的焦虑，你需要：
 

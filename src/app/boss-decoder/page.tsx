@@ -5,16 +5,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { NurseBubble } from "@/components/NurseBubble";
 import { BOSS_DECODER_PROMPT } from "@/lib/prompts";
-import { chatFetch } from "@/lib/llm-client";
-
-interface DecoderResult {
-  original: string;
-  surface: string;
-  subtext: string;
-  truth: string;
-  suggested_reply: string;
-  danger_level: number;
-}
+import { chatFetch, LLM_SETTINGS_REQUIRED_STATUS } from "@/lib/llm-client";
+import { CRISIS_RESPONSE_STATUS } from "@/lib/crisis";
+import { parseDecoderResult, type DecoderResult } from "@/lib/result-validation";
 
 const DANGER_LABELS = [
   "",
@@ -65,14 +58,18 @@ export default function BossDecoderPage() {
   const [error, setError] = useState("");
   const [nurseQuip, setNurseQuip] = useState("");
   const [placeholder, setPlaceholder] = useState("");
+  const [caseId, setCaseId] = useState("------");
 
   useEffect(() => {
-    setNurseQuip(NURSE_QUIPS[Math.floor(Math.random() * NURSE_QUIPS.length)]);
-    setPlaceholder(
-      PLACEHOLDER_EXAMPLES[
-        Math.floor(Math.random() * PLACEHOLDER_EXAMPLES.length)
-      ]
-    );
+    const timer = window.setTimeout(() => {
+      setNurseQuip(NURSE_QUIPS[Math.floor(Math.random() * NURSE_QUIPS.length)]);
+      setPlaceholder(
+        PLACEHOLDER_EXAMPLES[
+          Math.floor(Math.random() * PLACEHOLDER_EXAMPLES.length)
+        ]
+      );
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const handleDecode = async () => {
@@ -88,12 +85,15 @@ export default function BossDecoderPage() {
           ],
         });
 
+      if (res.status === CRISIS_RESPONSE_STATUS) return;
+      if (res.status === LLM_SETTINGS_REQUIRED_STATUS) return;
+
       const data = await res.json();
       if (data.error) throw new Error(data.error);
 
-      const jsonStr = data.content.replace(/```json?\n?|\n?```/g, "").trim();
-      const parsed: DecoderResult = JSON.parse(jsonStr);
+      const parsed = parseDecoderResult(data.content);
       setResult(parsed);
+      setCaseId(String(Date.now()).slice(-6));
     } catch (err: unknown) {
       console.error(err);
       setError(
@@ -108,6 +108,7 @@ export default function BossDecoderPage() {
     setResult(null);
     setBossMessage("");
     setError("");
+    setCaseId("------");
     setPlaceholder(
       PLACEHOLDER_EXAMPLES[
         Math.floor(Math.random() * PLACEHOLDER_EXAMPLES.length)
@@ -237,7 +238,7 @@ export default function BossDecoderPage() {
                     </span>
                   </div>
                   <span className="text-xs text-foreground/20 font-mono">
-                    CASE #{String(Date.now()).slice(-6)}
+                    CASE #{caseId}
                   </span>
                 </div>
 
