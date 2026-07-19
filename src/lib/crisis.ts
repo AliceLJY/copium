@@ -36,9 +36,11 @@ export function requestCrisisSupport(): void {
   }
 }
 
-export function latestUserContent(messages: Array<{ role: string; content: string }>): string {
-  for (let index = messages.length - 1; index >= 0; index--) {
-    if (messages[index]?.role === "user") return messages[index]?.content || "";
-  }
-  return "";
+export function containsCrisisLanguageInUserHistory(
+  messages: Array<{ role: string; content: string }>,
+): boolean {
+  return messages.some(
+    (message) =>
+      message.role === "user" && containsCrisisLanguage(message.content || ""),
+  );
 }

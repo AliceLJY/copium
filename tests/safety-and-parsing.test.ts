@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   CRISIS_RESPONSE_STATUS,
   containsCrisisLanguage,
+  containsCrisisLanguageInUserHistory,
 } from "../src/lib/crisis";
 import {
   ThinkTagFilter,
@@ -22,6 +23,7 @@ import {
   getLLMConfig,
   saveLLMConfig,
 } from "../src/lib/llm-config";
+import { WARD_STYLES } from "../src/lib/ward-styles";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -66,6 +68,23 @@ describe("local crisis interruption", () => {
     await expect(response.json()).resolves.toMatchObject({ crisis: true });
   });
 
+  it("blocks a request when crisis language only appears in older user history", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const messages = [
+      { role: "user" as const, content: "我不想活了" },
+      { role: "assistant" as const, content: "Please seek immediate human support." },
+      { role: "user" as const, content: "Let's talk about tomorrow instead." },
+    ];
+
+    expect(containsCrisisLanguageInUserHistory(messages)).toBe(true);
+    const response = await chatFetch({ messages });
+
+    expect(response.status).toBe(CRISIS_RESPONSE_STATUS);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   it("returns a configuration-required response without calling a provider", async () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);
@@ -76,6 +95,20 @@ describe("local crisis interruption", () => {
 
     expect(response.status).toBe(LLM_SETTINGS_REQUIRED_STATUS);
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("ward Tailwind classes", () => {
+  it("uses complete literal class maps instead of runtime utility names", () => {
+    for (const [color, styles] of Object.entries(WARD_STYLES)) {
+      expect(styles.text).toBe(`text-${color}`);
+      expect(styles.recommended).toContain(`border-${color}/50`);
+      expect(styles.recommended).toContain(`hover:bg-${color}/5`);
+      expect(styles.compact).toContain(`hover:border-${color}/30`);
+      expect(styles.card).toContain(`hover:border-${color}/40`);
+      expect(styles.card).toContain(`hover:bg-${color}/5`);
+      expect(Object.values(styles).join(" ")).not.toContain("${");
+    }
   });
 });
 

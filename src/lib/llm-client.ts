@@ -8,9 +8,8 @@
 
 import { getLLMConfig, requestOpenSettings } from "./llm-config";
 import {
-  containsCrisisLanguage,
+  containsCrisisLanguageInUserHistory,
   CRISIS_RESPONSE_STATUS,
-  latestUserContent,
   requestCrisisSupport,
 } from "./crisis";
 
@@ -147,7 +146,7 @@ export async function chatFetch(body: {
   messages: ChatMessage[];
   stream?: boolean;
 }): Promise<Response> {
-  if (containsCrisisLanguage(latestUserContent(body.messages))) {
+  if (containsCrisisLanguageInUserHistory(body.messages)) {
     requestCrisisSupport();
     return new Response(
       JSON.stringify({ crisis: true, error: "CRISIS_SUPPORT_REQUIRED" }),

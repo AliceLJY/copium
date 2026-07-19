@@ -8,6 +8,7 @@ import { TRIAGE_SYSTEM_PROMPT, getRandomNurseQuip } from "@/lib/prompts";
 import { chatFetch, LLM_SETTINGS_REQUIRED_STATUS } from "@/lib/llm-client";
 import { CRISIS_RESPONSE_STATUS } from "@/lib/crisis";
 import { parseTriageResult, type TriageResult } from "@/lib/result-validation";
+import { WARD_STYLES, type WardColor } from "@/lib/ward-styles";
 
 const LEVEL_COLORS = [
   "",
@@ -88,7 +89,16 @@ const WARDS = [
     color: "neon-orange",
     path: "/sunday-scaries",
   },
-];
+] satisfies ReadonlyArray<{
+  id: string;
+  icon: string;
+  name: string;
+  nameCn: string;
+  desc: string;
+  descCn: string;
+  color: WardColor;
+  path: string;
+}>;
 
 type PageMode = "input" | "result" | "wards";
 
@@ -160,6 +170,7 @@ export default function TriagePage() {
 
   const recommendedId = result ? getRecommendedWard(result.type) : "spiral";
   const recommendedWard = WARDS.find((w) => w.id === recommendedId) || WARDS[0];
+  const recommendedStyles = WARD_STYLES[recommendedWard.color];
   const otherWards = WARDS.filter((w) => w.id !== recommendedId);
 
   const goToWard = (path: string) => {
@@ -309,20 +320,20 @@ export default function TriagePage() {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => goToWard(recommendedWard.path)}
                   className={`w-full text-left p-5 rounded-lg bg-card-bg
-                             border-2 border-${recommendedWard.color}/50
-                             hover:bg-${recommendedWard.color}/5 transition-all cursor-pointer`}
+                             border-2 ${recommendedStyles.recommended}
+                             transition-all cursor-pointer`}
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-3xl">{recommendedWard.icon}</span>
                     <div className="flex-1">
-                      <p className={`font-bold text-lg text-${recommendedWard.color}`}>
+                      <p className={`font-bold text-lg ${recommendedStyles.text}`}>
                         {recommendedWard.name}
                       </p>
                       <p className="text-xs text-foreground/40">
                         {recommendedWard.nameCn} · {recommendedWard.desc}
                       </p>
                     </div>
-                    <span className={`text-${recommendedWard.color} text-xl`}>→</span>
+                    <span className={`${recommendedStyles.text} text-xl`}>→</span>
                   </div>
                 </motion.button>
               </motion.div>
@@ -347,10 +358,10 @@ export default function TriagePage() {
                       whileTap={{ scale: 0.97 }}
                       onClick={() => goToWard(ward.path)}
                       className={`text-left p-3 rounded-lg bg-card-bg border border-card-border
-                                 hover:border-${ward.color}/30 transition-all cursor-pointer`}
+                                 ${WARD_STYLES[ward.color].compact} transition-all cursor-pointer`}
                     >
                       <span className="text-lg">{ward.icon}</span>
-                      <p className={`font-bold text-xs text-${ward.color} mt-1`}>
+                      <p className={`font-bold text-xs ${WARD_STYLES[ward.color].text} mt-1`}>
                         {ward.name}
                       </p>
                       <p className="text-[10px] text-foreground/30">
@@ -395,13 +406,13 @@ export default function TriagePage() {
                     whileTap={{ scale: 0.97 }}
                     onClick={() => goToWard(ward.path)}
                     className={`text-left p-5 rounded-lg bg-card-bg border border-card-border
-                               hover:border-${ward.color}/40 hover:bg-${ward.color}/5
+                               ${WARD_STYLES[ward.color].card}
                                transition-all cursor-pointer`}
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <span className="text-2xl">{ward.icon}</span>
                       <div>
-                        <p className={`font-bold text-${ward.color}`}>
+                        <p className={`font-bold ${WARD_STYLES[ward.color].text}`}>
                           {ward.name}
                         </p>
                         <p className="text-xs text-foreground/40">
