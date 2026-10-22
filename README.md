@@ -6,6 +6,8 @@ An AI-assisted humor and stress-relief web app disguised as a cyberpunk emergenc
 
 > **Status:** stable · low-frequency maintenance · last verified 2026-10.
 
+**[Try it live →](https://aliceljy.github.io/copium/)** The Shredder ward works right away; the other wards need your own API key.
+
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-blue?logo=typescript&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
@@ -46,6 +48,16 @@ Life is stressful. Your boss is cryptic. AI might take your job. Monday exists. 
 
 ## Quick Start
 
+### In the browser (30 seconds)
+
+1. Open **https://aliceljy.github.io/copium/**.
+2. Go straight to the **Shredder** ward. It runs entirely in your browser and needs no key.
+3. For every other ward, click the gear in the top-right corner, pick a preset (DeepSeek, Kimi, MiniMax, SiliconFlow, or OpenRouter), and paste your own API key. The settings panel links to each provider's site, where you can get a key.
+
+Any OpenAI-compatible endpoint that accepts direct browser requests works. GPT-family models are also reachable through the OpenRouter preset.
+
+### Run locally
+
 ```bash
 git clone https://github.com/AliceLJY/copium.git
 cd copium
@@ -65,7 +77,7 @@ There is no application server proxying prompts. The API key is kept in browser 
 - **Framer Motion** for animations (page transitions, shake effects, staggered reveals)
 - **Browser-side `fetch`** to a user-selected OpenAI-compatible endpoint
 - **html-to-image** for shareable result cards
-- **Server-Sent Events** for streaming chat responses
+- **Browser-side parsing of the provider's streaming (SSE) responses** — no app server in between
 
 ## Features
 

@@ -6,6 +6,10 @@
 
 > **状态：** 稳定 · 低频维护 · 2026-10 最后核验。
 
+**[在线体验 →](https://aliceljy.github.io/copium/)** 焦虑粉碎机科室打开就能玩；其他科室需要你自己的 API key。
+
+[English README](./README.md)
+
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-blue?logo=typescript&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
@@ -44,6 +48,16 @@
 
 ## 快速开始
 
+### 浏览器里直接用（30 秒）
+
+1. 打开 **https://aliceljy.github.io/copium/**。
+2. 先去 **焦虑粉碎机** 科室，它完全在浏览器里运行，不需要 key。
+3. 其他科室：点右上角齿轮，选一个预设（DeepSeek、Kimi、MiniMax、SiliconFlow 或 OpenRouter），填入你自己的 API key。设置面板底部有各服务商官网的链接，去那里申请 key。
+
+任何支持浏览器直连的 OpenAI 兼容接口都能用；GPT 系模型也可以走 OpenRouter 预设。
+
+### 本地运行
+
 ```bash
 git clone https://github.com/AliceLJY/copium.git
 cd copium
@@ -63,7 +77,7 @@ npm run dev
 - **Framer Motion** 动画（页面过渡、抖动效果、交错揭示）
 - 浏览器端 **`fetch`** 调用用户选择的 OpenAI 兼容接口
 - **html-to-image** 生成可分享结果卡片
-- **Server-Sent Events** 流式聊天响应
+- **在浏览器里解析服务商的流式（SSE）响应**——中间没有应用服务器
 
 ## 特色
 
