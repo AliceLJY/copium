@@ -4,6 +4,8 @@
 
 An AI-assisted humor and stress-relief web app disguised as a cyberpunk emergency room. It offers absurd reframing, animated catharsis, and shareable results; it is not mental-health treatment.
 
+> **Status:** stable · low-frequency maintenance · last verified 2026-10.
+
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-blue?logo=typescript&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)

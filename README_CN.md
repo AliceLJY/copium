@@ -4,6 +4,8 @@
 
 一个披着赛博朋克急诊室外皮的 AI 辅助幽默减压 Web 应用。它提供荒诞重构、动画宣泄和可分享结果，但不是心理治疗。
 
+> **状态：** 稳定 · 低频维护 · 2026-10 最后核验。
+
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-blue?logo=typescript&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
