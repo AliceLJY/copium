@@ -63,7 +63,7 @@ git clone https://github.com/AliceLJY/copium.git
 cd copium
 npm install
 npm run dev
-# Open http://localhost:3000
+# Open http://localhost:3000/copium
 ```
 
 Click the gear in the top-right corner and enter an OpenAI-compatible endpoint that permits direct browser requests, its API key, and a model name. The app has presets for DeepSeek, Kimi, MiniMax, SiliconFlow, and OpenRouter, but provider CORS and model availability can change.

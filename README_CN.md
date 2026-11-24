@@ -63,7 +63,7 @@ git clone https://github.com/AliceLJY/copium.git
 cd copium
 npm install
 npm run dev
-# 打开 http://localhost:3000
+# 打开 http://localhost:3000/copium
 ```
 
 打开页面后，点击右上角齿轮，填写一个允许浏览器直连的 OpenAI 兼容接口、API key 和模型名。页面内置 DeepSeek、Kimi、MiniMax、SiliconFlow、OpenRouter 预设，但服务商的 CORS 与模型可用性可能变化。
