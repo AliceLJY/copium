@@ -184,6 +184,51 @@ describe("chatFetch non-stream reply handling", () => {
   });
 });
 
+describe("chatFetch odd provider replies", () => {
+  it("reads an object-shaped error by its code instead of printing [object Object]", async () => {
+    configure();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ error: { code: "rate_limited" } }, { status: 429 })),
+    );
+
+    const response = await chatFetch({ messages: [{ role: "user", content: "hi" }] });
+
+    expect(response.status).toBe(429);
+    const body = (await response.json()) as { error: string };
+    expect(body.error).toContain("rate_limited");
+    expect(body.error).not.toContain("[object Object]");
+  });
+
+  it("returns 502 when the reply is only <think> reasoning", async () => {
+    configure();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({ choices: [{ message: { content: "<think>only reasoning</think>" } }] }),
+      ),
+    );
+
+    const response = await chatFetch({ messages: [{ role: "user", content: "hi" }] });
+
+    expect(response.status).toBe(502);
+    await expect(response.json()).resolves.toHaveProperty("error");
+  });
+
+  it("returns a readable 502 when a 200 reply is not JSON (captive portal page)", async () => {
+    configure();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("<html>captive portal</html>", { status: 200 })),
+    );
+
+    const response = await chatFetch({ messages: [{ role: "user", content: "hi" }] });
+
+    expect(response.status).toBe(502);
+    await expect(response.json()).resolves.toHaveProperty("error");
+  });
+});
+
 describe("chatFetch stream rewriting (OpenAI SSE -> browser SSE)", () => {
   it("rewrites deltas, keeps lines split across chunks, hides <think> split across deltas, and ends with [DONE]", async () => {
     configure();

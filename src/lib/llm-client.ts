@@ -194,7 +194,13 @@ export async function chatFetch(body: {
     let detail = `${upstream.status}`;
     try {
       const errJson = await upstream.json();
-      detail = errJson?.error?.message || errJson?.error || detail;
+      const e = errJson?.error;
+      const picked =
+        (typeof e === "string" && e) ||
+        (typeof e?.message === "string" && e.message) ||
+        (typeof e?.code === "string" && e.code) ||
+        (typeof errJson?.message === "string" && errJson.message);
+      if (picked) detail = `${upstream.status} ${picked}`;
     } catch {
       // keep status code
     }
@@ -206,15 +212,23 @@ export async function chatFetch(body: {
 
   // ---- Non-stream: unwrap OpenAI shape → { content } ----
   if (!body.stream) {
-    const data = await upstream.json();
-    const raw = data.choices?.[0]?.message?.content;
-    if (typeof raw !== "string" || !raw.trim()) {
-      return new Response(JSON.stringify({ error: "AI 接口没有返回可用文本" }), {
+    const unusable = () =>
+      new Response(JSON.stringify({ error: "AI 接口没有返回可用文本" }), {
         status: 502,
         headers: { "Content-Type": "application/json" },
       });
+    let data: { choices?: { message?: { content?: unknown } }[] };
+    try {
+      data = await upstream.json();
+    } catch {
+      // e.g. a captive-portal HTML page served with 200
+      return unusable();
     }
-    return new Response(JSON.stringify({ content: filterThinkText(raw) }), {
+    const raw = data?.choices?.[0]?.message?.content;
+    if (typeof raw !== "string" || !raw.trim()) return unusable();
+    const content = filterThinkText(raw);
+    if (!content.trim()) return unusable(); // only <think>…</think>, nothing to show
+    return new Response(JSON.stringify({ content }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
